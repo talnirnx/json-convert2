@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to HTML Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Enter JSON:</div>
+        <textarea id="jsonInput" placeholder="Paste your JSON here"></textarea>
+        <button onclick="convertJson()">Convert</button>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        function convertJson() {
+            const jsonInput = document.getElementById('jsonInput').value;
+            let jsonData;
+
+            try {
+                jsonData = JSON.parse(jsonInput);
+            } catch (e) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Invalid JSON format</p>';
+                return;
+            }
+
+            const resultContainer = document.getElementById('result');
+            resultContainer.innerHTML = '';
+            resultContainer.appendChild(renderJsonToHtml(jsonData));
+        }
+
+        function renderJsonToHtml(jsonData, parentKey = '') {
+            const container = document.createElement('div');
+            container.classList.add('container');
+
+            for (const key in jsonData) {
+                const value = jsonData[key];
+                const keyElement = document.createElement('div');
+                keyElement.classList.add('key');
+                keyElement.innerHTML = `<strong>${parentKey ? parentKey + ' > ' : ''}${key}:</strong>`;
+
+                if (typeof value === 'object' && !Array.isArray(value)) {
+                    keyElement.appendChild(renderJsonToHtml(value, key));
+                } else {
+                    const valueElement = document.createElement('div');
+                    valueElement.classList.add('value');
+                    valueElement.innerHTML = convertMarkdown(value);
+                    keyElement.appendChild(valueElement);
+                }
+
+                container.appendChild(keyElement);
+            }
+
+            return container;
+        }
+
+        function convertMarkdown(text) {
+            if (typeof text !== 'string') {
+                return text;
+            }
+
+            const bold = /\*\*(.*?)\*\*/g;
+            const italic = /\*(.*?)\*/g;
+            const bullet = /\n\u2022 (.*?)(?=\n|\u2022|$)/g;
+
+            return text
+                .replace(bold, '<strong>$1</strong>')
+                .replace(italic, '<em>$1</em>')
+                .replace(bullet, '<li>$1</li>')
+                .replace(/\n/g, '<br>');
+        }
+    </script>
+</body>
+</html>
